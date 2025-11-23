@@ -18,7 +18,7 @@ print(f"Input Topic: {input_topic}")
 print(f"Output Temp: {temp_alerts_topic}")
 print(f"Output Hum:  {hum_alerts_topic}")
 
-# --- 1. ЗАПУСК SPARK SESSION ---
+
 spark = SparkSession.builder \
     .appName("IoT_Streaming_Final_Fixed") \
     .master("local[*]") \
@@ -27,7 +27,7 @@ spark = SparkSession.builder \
 
 spark.sparkContext.setLogLevel('WARN')
 
-# --- 2. ЧТЕНИЕ И ОБРАБОТКА CSV (УСЛОВИЯ) ---
+
 alerts_schema = StructType([
     StructField("id", IntegerType(), True),
     StructField("humidity_min", IntegerType(), True),
@@ -43,14 +43,14 @@ alerts_df = spark.read \
     .schema(alerts_schema) \
     .csv("alerts_conditions.csv")
 
-# Заменяем -999 на NULL для корректной работы условий > и <
+
 alerts_df = alerts_df \
     .withColumn("temperature_min", when(col("temperature_min") == -999, None).otherwise(col("temperature_min"))) \
     .withColumn("temperature_max", when(col("temperature_max") == -999, None).otherwise(col("temperature_max"))) \
     .withColumn("humidity_min", when(col("humidity_min") == -999, None).otherwise(col("humidity_min"))) \
     .withColumn("humidity_max", when(col("humidity_max") == -999, None).otherwise(col("humidity_max")))
 
-# --- 3. ЧТЕНИЕ KAFKA STREAM ---
+
 sensor_schema = StructType([
     StructField("sensor_id", IntegerType()),
     StructField("timestamp", StringType()),  
